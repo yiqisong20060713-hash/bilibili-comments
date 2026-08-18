@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>评论存档 - BV1fZTi69EFK</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #f6f7f8;
+  --card-bg: #fff;
+  --text: #18191c;
+  --text-secondary: #9499a0;
+  --border: #e3e5e7;
+  --accent: #00aeec;
+  --like: #ff6699;
+  --shadow: 0 2px 8px rgba(0,0,0,0.04);
+  --reply-bg: #f6f7f8;
+}
+
+body.dark {
+  --bg: #17181f;
+  --card-bg: #1f2029;
+  --text: #e3e5e7;
+  --text-secondary: #7a7f8a;
+  --border: #2c2d35;
+  --shadow: 0 2px 8px rgba(0,0,0,0.2);
+  --reply-bg: #272831;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  transition: background 0.3s, color 0.3s;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  box-shadow: var(--shadow);
+}
+
+.header h1 { font-size: 18px; margin-bottom: 12px; }
+
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+}
+.search-box:focus { border-color: var(--accent); }
+
+.btn {
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.stats { font-size: 13px; color: var(--text-secondary); }
+
+.container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 0 16px;
+}
+
+.comment-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  transition: background 0.3s;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.comment-meta { flex: 1; min-width: 0; }
+.username { font-size: 14px; font-weight: 500; }
+.comment-info { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+.like-count {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.comment-content {
+  font-size: 14px;
+  word-break: break-word;
+  margin-left: 50px;
+}
+
+.comment-pics {
+  margin-left: 50px;
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 100px);
+  gap: 6px;
+}
+.comment-pics img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.comment-pics img:hover { opacity: 0.8; }
+
+.reply-toggle {
+  margin-left: 50px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--accent);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px 0;
+}
+
+.replies {
+  margin-left: 50px;
+  margin-top: 8px;
+  background: var(--reply-bg);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: none;
+}
+.replies.show { display: block; }
+
+.reply-item {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.reply-item:last-child { border-bottom: none; }
+.reply-item .reply-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.reply-item .username { font-size: 13px; color: var(--accent); }
+.reply-item .comment-content { margin-left: 0; font-size: 13px; }
+.reply-item .comment-info { font-size: 11px; }
+.reply-item .comment-pics {
+  margin-left: 0;
+  margin-top: 6px;
+  grid-template-columns: repeat(auto-fill, 80px);
+}
+.reply-item .comment-pics img {
+  width: 80px;
+  height: 80px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 24px 0;
+  flex-wrap: wrap;
+}
+.pagination .btn { padding: 6px 12px; font-size: 13px; }
+.page-info { font-size: 13px; color: var(--text-secondary); }
+
+.loading {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--text-secondary);
+}
+
+.empty {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--text-secondary);
+}
+
+.lightbox {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.9);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  cursor: zoom-out;
+}
+.lightbox.show { display: flex; }
+.lightbox img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📝 评论存档</h1>
+  <div class="controls">
+    <input type="text" class="search-box" id="searchInput" placeholder="搜索用户名或评论内容...">
+    <button class="btn" id="sortBtn" onclick="toggleSort()">按时间</button>
+    <button class="btn" id="themeBtn" onclick="toggleTheme()">🌙 深色</button>
+    <span class="stats" id="stats"></span>
+  </div>
+</div>
+
+<div class="container">
+  <div class="loading" id="loading">加载中...</div>
+  <div id="commentList"></div>
+  <div class="pagination" id="pagination" style="display:none;">
+    <button class="btn" onclick="goPage(1)">首页</button>
+    <button class="btn" onclick="goPage(currentPage-1)">上一页</button>
+    <span class="page-info" id="pageInfo"></span>
+    <button class="btn" onclick="goPage(currentPage+1)">下一页</button>
+    <button class="btn" onclick="goPage(totalPages)">末页</button>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt="" referrerpolicy="no-referrer">
+</div>
+
+<script>
+let allComments = [];
+let mainComments = [];
+let filteredMain = [];
+let currentPage = 1;
+const pageSize = 20;
+let totalPages = 1;
+let sortByTime = true;
+
+const avatarColors = ['#fb7299','#00aeec','#ff9f43','#26de81','#a55eea','#fd79a8','#74b9ff','#fdcb6e','#55efc4','#ff7675'];
+
+function getAvatarColor(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return avatarColors[Math.abs(hash) % avatarColors.length];
+}
+
+function formatTime(ts) {
+  const d = new Date(ts * 1000);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function renderPics(pictures) {
+  if (!pictures || pictures.length === 0) return '';
+  let html = '<div class="comment-pics">';
+  pictures.forEach(url => {
+    html += `<img src="${escapeHtml(url)}" referrerpolicy="no-referrer" onclick="openLightbox('${escapeHtml(url)}')" alt="评论图片" loading="lazy">`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function openLightbox(url) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightbox').classList.add('show');
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('show');
+}
+
+function loadComments() {
+  fetch('comments.json')
+    .then(r => r.json())
+    .then(data => {
+      allComments = data;
+      buildTree();
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('stats').textContent = `共 ${allComments.length} 条（${mainComments.length} 条主评论）`;
+      applyFilter();
+    })
+    .catch(err => {
+      document.getElementById('loading').innerHTML = '加载失败，请用本地服务器打开（python -m http.server 8080）';
+      console.error(err);
+    });
+}
+
+function buildTree() {
+  const replyMap = {};
+  allComments.forEach(c => {
+    const pid = String(c.parent_rpid);
+    if (pid !== '0') {
+      if (!replyMap[pid]) replyMap[pid] = [];
+      replyMap[pid].push(c);
+    }
+  });
+  mainComments = allComments
+    .filter(c => String(c.parent_rpid) === '0')
+    .map(c => ({ ...c, replies: replyMap[c.rpid] || [] }));
+}
+
+function applyFilter() {
+  const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+  if (keyword) {
+    filteredMain = mainComments.filter(c =>
+      c.username.toLowerCase().includes(keyword) ||
+      c.content.toLowerCase().includes(keyword) ||
+      c.replies.some(r => r.username.toLowerCase().includes(keyword) || r.content.toLowerCase().includes(keyword))
+    );
+  } else {
+    filteredMain = [...mainComments];
+  }
+  if (sortByTime) {
+    filteredMain.sort((a, b) => b.timestamp - a.timestamp);
+  } else {
+    filteredMain.sort((a, b) => b.like_count - a.like_count);
+  }
+  totalPages = Math.max(1, Math.ceil(filteredMain.length / pageSize));
+  currentPage = 1;
+  renderPage();
+}
+
+function renderPage() {
+  const list = document.getElementById('commentList');
+  const start = (currentPage - 1) * pageSize;
+  const pageItems = filteredMain.slice(start, start + pageSize);
+  if (pageItems.length === 0) {
+    list.innerHTML = '<div class="empty">没有找到相关评论</div>';
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+  let html = '';
+  pageItems.forEach((c, idx) => {
+    html += renderComment(c, start + idx);
+  });
+  list.innerHTML = html;
+  document.getElementById('pagination').style.display = 'flex';
+  document.getElementById('pageInfo').textContent = `第 ${currentPage} / ${totalPages} 页`;
+}
+
+function renderComment(c, globalIdx) {
+  const avatarText = c.username.charAt(0).toUpperCase();
+  const avatarColor = getAvatarColor(c.username);
+  const ip = c.ip_location ? ` · ${c.ip_location}` : '';
+  const replyCount = c.replies.length;
+  let repliesHtml = '';
+  if (replyCount > 0) {
+    const sortedReplies = [...c.replies].sort((a, b) => a.timestamp - b.timestamp);
+    repliesHtml = `<button class="reply-toggle" onclick="toggleReplies(${globalIdx})">📩 展开 ${replyCount} 条回复</button>`;
+    repliesHtml += `<div class="replies" id="replies-${globalIdx}">`;
+    sortedReplies.forEach(r => {
+      repliesHtml += `
+        <div class="reply-item">
+          <div class="reply-header">
+            <span class="username">${escapeHtml(r.username)}</span>
+            <span class="comment-info">${formatTime(r.timestamp)}${r.ip_location ? ' · ' + r.ip_location : ''}</span>
+          </div>
+          <div class="comment-content">${escapeHtml(r.content)}</div>
+          ${renderPics(r.pictures)}
+        </div>`;
+    });
+    repliesHtml += '</div>';
+  }
+  return `
+    <div class="comment-card">
+      <div class="comment-header">
+        <div class="avatar" style="background:${avatarColor}">${avatarText}</div>
+        <div class="comment-meta">
+          <div class="username">${escapeHtml(c.username)}</div>
+          <div class="comment-info">${formatTime(c.timestamp)}${ip}</div>
+        </div>
+        <div class="like-count">👍 ${c.like_count}</div>
+      </div>
+      <div class="comment-content">${escapeHtml(c.content)}</div>
+      ${renderPics(c.pictures)}
+      ${repliesHtml}
+    </div>`;
+}
+
+function toggleReplies(idx) {
+  const el = document.getElementById(`replies-${idx}`);
+  const btn = el.previousElementSibling;
+  if (el.classList.contains('show')) {
+    el.classList.remove('show');
+    btn.textContent = `📩 展开 ${btn.textContent.match(/\d+/)[0]} 条回复`;
+  } else {
+    el.classList.add('show');
+    btn.textContent = `📩 收起回复`;
+  }
+}
+
+function goPage(page) {
+  if (page < 1) page = 1;
+  if (page > totalPages) page = totalPages;
+  currentPage = page;
+  renderPage();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleSort() {
+  sortByTime = !sortByTime;
+  document.getElementById('sortBtn').textContent = sortByTime ? '按时间' : '按热度';
+  document.getElementById('sortBtn').classList.toggle('active', !sortByTime);
+  applyFilter();
+}
+
+function toggleTheme() {
+  document.body.classList.toggle('dark');
+  const btn = document.getElementById('themeBtn');
+  btn.textContent = document.body.classList.contains('dark') ? '☀️ 浅色' : '🌙 深色';
+}
+
+let searchTimer;
+document.getElementById('searchInput').addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(applyFilter, 300);
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeLightbox();
+});
+
+loadComments();
+</script>
+
+</body>
+</html>
