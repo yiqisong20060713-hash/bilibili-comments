@@ -177,13 +177,15 @@ function renderList() {
       for (var j = 0; j < replies.length; j++) {
         replyDiv.appendChild(renderComment(replies[j], true));
       }
-      toggle.addEventListener("click", function() {
-        var rd = this.nextSibling;
-        rd.classList.toggle("collapsed");
-        this.textContent = rd.classList.contains("collapsed")
-          ? "共 " + replies.length + " 条回复，点击展开"
-          : "共 " + replies.length + " 条回复，点击收起";
-      });
+      (function(repCount) {
+        toggle.addEventListener("click", function() {
+          var rd = this.nextSibling;
+          rd.classList.toggle("collapsed");
+          this.textContent = rd.classList.contains("collapsed")
+            ? "共 " + repCount + " 条回复，点击展开"
+            : "共 " + repCount + " 条回复，点击收起";
+        });
+      })(replies.length);
       thread.appendChild(toggle);
       thread.appendChild(replyDiv);
     }
@@ -240,13 +242,20 @@ function doSort() {
 
 function loadData() {
   document.getElementById("commentList").innerHTML = '<div class="loading">加载中，请稍候...</div>';
-  fetch("comments.json")
-    .then(function(res) {
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      return res.json();
+  fetch("comments_meta.json")
+    .then(function(res) { return res.json(); })
+    .then(function(meta) {
+      var promises = [];
+      for (var i = 1; i <= meta.files; i++) {
+        promises.push(fetch("comments_" + i + ".json").then(function(r) { return r.json(); }));
+      }
+      return Promise.all(promises);
     })
-    .then(function(data) {
-      allComments = data;
+    .then(function(chunks) {
+      allComments = [];
+      for (var i = 0; i < chunks.length; i++) {
+        allComments = allComments.concat(chunks[i]);
+      }
       buildThreads();
       filtered = mainComments.slice();
       doSort();
